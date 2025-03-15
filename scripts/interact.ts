@@ -538,7 +538,7 @@ async function main() {
   }
 
   // Connect to PredictionMarket (update this address after redeployment)
-  const predictionMarketAddress = "0xB482f529b118d21759eB53d94450a20Edeb78344"; // Placeholder, update after deployment
+  const predictionMarketAddress = "0xB90A62694A6e49598D305343eC4724c8Ef33EAC7"; // Placeholder, update after deployment
   const predictionMarket = new ethers.Contract(predictionMarketAddress, predictionMarketABI, deployer);
 
   // Verify zetaToken address in PredictionMarket

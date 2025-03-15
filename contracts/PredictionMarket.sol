@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.7; // Updated from ^0.8.28 to 0.8.7
+pragma solidity 0.8.7;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@zetachain/protocol-contracts/contracts/zevm/interfaces/IZRC20.sol";
@@ -32,7 +32,7 @@ contract PredictionMarket is Ownable, zContract {
     event BetPlaced(uint256 marketId, address user, uint256 amount, uint256 outcomeIndex);
     event MarketResolved(uint256 marketId, uint256 winningOutcome);
 
-    constructor(address _zetaToken) Ownable(msg.sender) {
+    constructor(address _zetaToken) {
         zetaToken = IZRC20(_zetaToken);
     }
 
@@ -83,12 +83,14 @@ contract PredictionMarket is Ownable, zContract {
     }
 
     function onCrossChainCall(
-        uint256 sourceChainId,
-        address sourceAddress,
-        bytes calldata data
+        address zrc20,
+        uint256 amount,
+        bytes calldata message
     ) external override {
-        require(sourceChainId == 11155111, "Invalid source chain"); // Sepolia Chain ID
-        (uint256 marketId, uint256 outcomeIndex, uint256 amount, address user) = abi.decode(data, (uint256, uint256, uint256, address));
+        require(zrc20 == address(zetaToken), "Invalid ZRC20 token");
+
+        // Decode the message to extract marketId, outcomeIndex, and user
+        (uint256 marketId, uint256 outcomeIndex, address user) = abi.decode(message, (uint256, uint256, address));
 
         require(marketId > 0 && marketId <= marketCount, "Invalid market ID");
         require(amount > 0, "Bet amount must be greater than zero");
@@ -96,17 +98,17 @@ contract PredictionMarket is Ownable, zContract {
         require(!markets[marketId].resolved, "Market already resolved");
         require(outcomeIndex < marketOutcomes[marketId].length, "Invalid outcome index");
 
-        // Transfer the bet amount + fee from the user
-        uint256 totalAmount = amount + BET_FEE;
-        zetaToken.transferFrom(user, address(this), totalAmount);
+        // The amount is already transferred to this contract via ZetaChain's cross-chain mechanism
+        // We just need to account for the bet amount (excluding the fee)
+        uint256 betAmount = amount - BET_FEE;
 
         marketBets[marketId].push(Bet({
             user: user,
-            amount: amount,
+            amount: betAmount,
             outcomeIndex: outcomeIndex
         }));
 
-        emit BetPlaced(marketId, user, amount, outcomeIndex);
+        emit BetPlaced(marketId, user, betAmount, outcomeIndex);
     }
 
     function resolveMarket(uint256 _marketId, uint256 _winningOutcome) external onlyOwner {

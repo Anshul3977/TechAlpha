@@ -8,6 +8,8 @@
     "hardhat": "^2.22.19"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^5.2.0"
+    "@openzeppelin/contracts": "^4.8.0",
+    "@zetachain/protocol-contracts": "^0.0.7",
+    "@zetachain/toolkit": "^12.0.0"
   }
 }
